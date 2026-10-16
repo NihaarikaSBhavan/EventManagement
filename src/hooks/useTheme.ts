@@ -4,6 +4,8 @@ type Theme = 'light' | 'dark';
 const KEY = 'ems-theme';
 
 function initial(): Theme {
+  const host = document.documentElement.dataset.theme;
+  if (host === 'light' || host === 'dark') return host;
   try {
     const saved = localStorage.getItem(KEY);
     if (saved === 'light' || saved === 'dark') return saved;

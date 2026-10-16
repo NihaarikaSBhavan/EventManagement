@@ -1,6 +1,6 @@
 import { Compass } from 'lucide-react';
 import { lazy, Suspense, type ComponentType, type ReactNode } from 'react';
-import { createBrowserRouter, Link, RouterProvider } from 'react-router-dom';
+import { createBrowserRouter, createMemoryRouter, Link, RouterProvider } from 'react-router-dom';
 import { Toaster } from 'sonner';
 import { AppShell } from '@/components/layout/AppShell';
 import { Card } from '@/components/ui/Card';
@@ -38,7 +38,10 @@ function NotFound() {
   );
 }
 
-const router = createBrowserRouter([
+/** VITE_ROUTER=memory for embedded hosts where the page URL can't carry app routes. */
+const createRouter = import.meta.env.VITE_ROUTER === 'memory' ? createMemoryRouter : createBrowserRouter;
+
+const router = createRouter([
   {
     path: '/',
     element: <AppShell />,

@@ -44,7 +44,7 @@ export function PayslipDialog({ code, onClose }: { code: string | null; onClose:
       size="lg"
       footer={
         <>
-          {mode === 'pdf' && <Button onClick={() => window.print()}><Printer />Print / Save PDF</Button>}
+          {mode === 'pdf' && !import.meta.env.VITE_EMBED && <Button onClick={() => window.print()}><Printer />Print / Save PDF</Button>}
           <Button onClick={() => notify(send(employee.code))}><Mail />{employee.payslipSentAt ? 'Resend payslip' : 'Email payslip'}</Button>
           <Button variant="primary" onClick={onClose}>Done</Button>
         </>
