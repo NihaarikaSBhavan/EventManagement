@@ -10,6 +10,10 @@ npm run typecheck
 npm run build
 ```
 
+## For event managers
+
+The app opens on **My events**: every event you're preparing, each with four readiness checks — job orders, gear, client payments, vendors & permits — in green, amber or red, a countdown to load-in, and a **Needs attention** list that ranks blockers across events and opens each one where it gets fixed. Each event has its own **workspace** (lifecycle timeline, job orders, gear with shortfall retry, client payments, vendors & permits, run of show, wrap-up and close). **Show day** is a phone-first view for the live event: up-next cue, tick-offs, issue reporting and crew on duty. The bell collects blockers and anything open on events loading in within three days. Back-office modules (finance, HR, inventory, vendors) sit under *Back office* in the menu.
+
 ## Architecture
 
 ```

@@ -3,6 +3,7 @@ import { Fragment } from 'react';
 import { Kbd } from '@/components/ui/Feedback';
 import { Button } from '@/components/ui/Button';
 import { usePersona } from '@/hooks/usePermission';
+import { AlertsMenu } from './AlertsMenu';
 
 export interface Crumb { label: string }
 
@@ -32,6 +33,7 @@ export function TopBar({ crumbs, onMenu, onSearch, theme, onToggleTheme }: { cru
           <Search className="size-3.5" /> Search or jump to… <Kbd>⌘K</Kbd>
         </button>
         <Button variant="ghost" size="icon" className="sm:hidden" onClick={onSearch} aria-label="Search"><Search /></Button>
+        <AlertsMenu />
         <Button variant="ghost" size="icon" onClick={onToggleTheme} aria-label={theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'}>
           {theme === 'dark' ? <Sun /> : <Moon />}
         </Button>

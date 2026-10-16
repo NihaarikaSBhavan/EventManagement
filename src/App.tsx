@@ -9,6 +9,9 @@ import { TooltipProvider } from '@/components/ui/Tooltip';
 const page = <K extends string>(load: () => Promise<Record<K, ComponentType>>, name: K) =>
   lazy(() => load().then((m) => ({ default: m[name] })));
 
+const MyEventsPage = page(() => import('@/features/home/MyEventsPage'), 'MyEventsPage');
+const EventWorkspacePage = page(() => import('@/features/workspace/EventWorkspacePage'), 'EventWorkspacePage');
+const ShowDayPage = page(() => import('@/features/showday/ShowDayPage'), 'ShowDayPage');
 const DashboardPage = page(() => import('@/features/dashboard/DashboardPage'), 'DashboardPage');
 const CalendarPage = page(() => import('@/features/events/CalendarPage'), 'CalendarPage');
 const FinancePage = page(() => import('@/features/finance/FinancePage'), 'FinancePage');
@@ -33,7 +36,7 @@ const withSuspense = (el: ReactNode) => <Suspense fallback={<PageSkeleton />}>{e
 function NotFound() {
   return (
     <Card>
-      <EmptyState icon={Compass} title="Page not found" description="That module does not exist." action={<Link to="/" className="text-xs font-medium text-primary hover:underline">Go to dashboard</Link>} />
+      <EmptyState icon={Compass} title="Page not found" description="That module does not exist." action={<Link to="/" className="text-xs font-medium text-primary hover:underline">Go to My events</Link>} />
     </Card>
   );
 }
@@ -46,7 +49,10 @@ const router = createRouter([
     path: '/',
     element: <AppShell />,
     children: [
-      { index: true, element: withSuspense(<DashboardPage />) },
+      { index: true, element: withSuspense(<MyEventsPage />) },
+      { path: 'events/:code', element: withSuspense(<EventWorkspacePage />) },
+      { path: 'show-day', element: withSuspense(<ShowDayPage />) },
+      { path: 'overview', element: withSuspense(<DashboardPage />) },
       { path: 'calendar', element: withSuspense(<CalendarPage />) },
       { path: 'leads', element: withSuspense(<LeadsPage />) },
       { path: 'jobs', element: withSuspense(<JobsPage />) },

@@ -12,7 +12,7 @@ import { notify } from '@/hooks/useAction';
 import { addDays, TODAY } from '@/lib/dates';
 import { useAppStore } from '@/store/useAppStore';
 
-export function JobFormDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (o: boolean) => void }) {
+export function JobFormDialog({ open, onOpenChange, defaultEvent }: { open: boolean; onOpenChange: (o: boolean) => void; defaultEvent?: string }) {
   const { events, jobs } = useAppStore((s) => s.data);
   const create = useAppStore((s) => s.createJob);
   const [title, setTitle] = useState('');
@@ -31,8 +31,8 @@ export function JobFormDialog({ open, onOpenChange }: { open: boolean; onOpenCha
   useEffect(() => {
     if (!open) return;
     setTitle(''); setDeliverables([]); setDraft(''); setGear({}); setErrors({}); setDue(addDays(TODAY, 7));
-    setEventCode(events.find((e) => e.status !== 'Completed')?.code ?? '');
-  }, [open, events]);
+    setEventCode(defaultEvent ?? events.find((e) => e.status !== 'Completed')?.code ?? '');
+  }, [open, events, defaultEvent]);
 
   const addDeliverable = () => {
     const t = draft.trim();

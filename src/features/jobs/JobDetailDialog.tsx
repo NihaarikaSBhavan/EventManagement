@@ -53,7 +53,7 @@ export function JobDetailDialog() {
 
         <DetailGrid
           items={[
-            { label: 'Parent event', value: event ? <button type="button" className="text-left font-medium text-primary hover:underline" onClick={() => openEvent(event.code)}>{event.title}</button> : job.eventCode },
+            { label: 'Parent event', value: event ? <button type="button" className="text-left font-medium text-primary hover:underline" onClick={() => { close(); openEvent(event.code); }}>{event.title}</button> : job.eventCode },
             { label: 'Department', value: job.department },
             { label: 'Due', value: <span className={cn(isLate(job, TODAY) && 'font-medium text-danger')}>{formatDate(job.due)}</span> },
             { label: 'Assigned executive', value: job.executive },

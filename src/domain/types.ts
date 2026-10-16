@@ -24,6 +24,10 @@ export interface ProductionEvent {
   capacity: number;
   lead: string;
   format: string;
+  /** Client feedback captured at wrap-up. */
+  feedback?: string | null;
+  /** Set when the event manager closes the event after wrap-up. */
+  closedAt?: string | null;
 }
 
 export type City = 'Chennai' | 'Bengaluru' | 'Hyderabad' | 'Kochi' | 'Coimbatore' | 'Madurai' | 'Mysuru' | 'Visakhapatnam';
@@ -86,8 +90,45 @@ export interface JobOrder {
   priority: JobPriority;
   stage: JobStage;
   due: string;
+  /** Reserved gear. */
   gear: GearLine[];
+  /** What was asked for; differs from `gear` when stock ran short. Defaults to `gear`. */
+  requested?: GearLine[];
   deliverables: Deliverable[];
+}
+
+export type BookingKind = 'Vendor' | 'Permit';
+export type BookingStatus = 'Not started' | 'In progress' | 'Confirmed';
+
+/** A vendor booking or a statutory permit an event depends on. */
+export interface Booking {
+  id: string;
+  eventCode: string;
+  kind: BookingKind;
+  name: string;
+  detail: string;
+  owner: string;
+  due: string;
+  status: BookingStatus;
+}
+
+export interface RunOfShowItem {
+  id: string;
+  eventCode: string;
+  date: string;
+  time: string;
+  title: string;
+  owner: string;
+  done: boolean;
+}
+
+export interface Issue {
+  id: string;
+  eventCode: string;
+  text: string;
+  raisedBy: string;
+  raisedAt: string;
+  resolvedAt: string | null;
 }
 
 export type VendorSpecialty = 'Audio & Sound' | 'Stage & Rigging' | 'LED & Visuals' | 'Lighting & FX' | 'Catering & Dining' | 'Logistics & Heavy Cranes' | 'Decor & Florals';
@@ -193,4 +234,7 @@ export interface Dataset {
   invoices: CustomerInvoice[];
   bills: VendorBill[];
   expenses: Expense[];
+  bookings: Booking[];
+  runOfShow: RunOfShowItem[];
+  issues: Issue[];
 }

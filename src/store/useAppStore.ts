@@ -8,7 +8,7 @@ import {
   documentTotal, invoiceTotals, jobProgress, nextId, nextJobNumber, payBreakdown, reserveGear, transferModeFor,
 } from '@/domain/selectors';
 import type {
-  BillingMilestone, City, Dataset, Department, Employee, EventStatus, ExpenseProcess, ExpenseStatus, GearRequest, GstRate,
+  BillingMilestone, Booking, BookingStatus, City, Dataset, Department, Employee, EventStatus, ExpenseProcess, ExpenseStatus, GearRequest, GstRate,
   InventoryItem, InvoiceStatus, JobOrder, JobPriority, JobStage, Lead, LeadStage, LineItem, PayStatus, Persona,
   ProductionEvent, Vendor, VendorStatus,
 } from '@/domain/types';
@@ -26,11 +26,16 @@ export type InvoiceInput = { eventCode: string; milestone: BillingMilestone; lin
 export type BillInput = { vendor: string; eventCode: string; lines: LineItem[]; gst: GstRate; dueOn: string };
 export type ExpenseInput = { description: string; department: Department; process: ExpenseProcess; eventCode: string; amount: number; date: string };
 export type EventInput = Omit<ProductionEvent, 'code'>;
+export type BookingInput = Omit<Booking, 'id'>;
+export type RunItemInput = { eventCode: string; date: string; time: string; title: string; owner: string };
 export type JobInput = Omit<JobOrder, 'no' | 'stage' | 'gear' | 'deliverables'> & { deliverables: string[]; gear: GearRequest };
 
 interface AppState {
   data: Dataset;
   personaId: string;
+  /** Alert ids the current viewer has dismissed. */
+  readAlerts: string[];
+  markAlertsRead: (ids: string[]) => void;
   persona: () => Persona;
   allowed: (p: Permission) => boolean;
   setPersona: (id: string) => ActionResult;
@@ -64,6 +69,16 @@ interface AppState {
   createJob: (input: JobInput) => ActionResult;
   moveJob: (no: string, stage: JobStage) => ActionResult;
   toggleDeliverable: (no: string, deliverableId: string) => ActionResult;
+  topUpGear: (no: string) => ActionResult;
+
+  addBooking: (input: BookingInput) => ActionResult;
+  setBookingStatus: (id: string, status: BookingStatus) => ActionResult;
+  addRunItem: (input: RunItemInput) => ActionResult;
+  toggleRunItem: (id: string) => ActionResult;
+  reportIssue: (eventCode: string, text: string) => ActionResult;
+  resolveIssue: (id: string) => ActionResult;
+  saveFeedback: (eventCode: string, feedback: string) => ActionResult;
+  closeEvent: (eventCode: string) => ActionResult;
 }
 
 function eventCodeFor(events: ProductionEvent[], city: string, startIso: string) {
@@ -83,7 +98,9 @@ export const useAppStore = create<AppState>()((set, get) => {
 
   return {
     data: createSeed(),
-    personaId: 'u1',
+    personaId: 'u3',
+    readAlerts: [],
+    markAlertsRead: (ids) => set((s) => ({ readAlerts: [...new Set([...s.readAlerts, ...ids])] })),
     persona: () => PERSONAS.find((p) => p.id === get().personaId) ?? PERSONAS[0],
     allowed: (p) => can(get().persona().role, p),
 
@@ -93,7 +110,7 @@ export const useAppStore = create<AppState>()((set, get) => {
       return ok(`Now acting as ${p.name} · ${p.role}`);
     },
     resetDemo: () => {
-      set({ data: createSeed() });
+      set({ data: createSeed(), readAlerts: [] });
       return ok('Demo data restored');
     },
 
@@ -129,6 +146,7 @@ export const useAppStore = create<AppState>()((set, get) => {
         no: nextJobNumber(data.jobs, code), title: 'Production kick-off & gear reservation', eventCode: code, department: 'Production',
         executive: lead.executive, teamLead: 'Hariprasad Nair', manager: 'Senthil Kumar', priority: 'High', stage: 'Open', due: addDays(start, -7),
         gear: granted,
+        requested: Object.entries(lead.gear).filter(([, q]) => q > 0).map(([itemId, qty]) => ({ itemId, qty })),
         deliverables: ['Client kick-off call & run-of-show brief', 'Venue shortlist & site recce', 'Confirm reserved gear at depot', 'Issue production budget to Finance']
           .map((text, i) => ({ id: `${code}-d${i}`, text, done: false })),
       };
@@ -290,6 +308,7 @@ export const useAppStore = create<AppState>()((set, get) => {
       const { granted, shortfall } = reserveGear(input.gear, data.inventory, data.jobs);
       const job: JobOrder = {
         ...input, no, stage: 'Open', gear: granted,
+        requested: Object.entries(input.gear).filter(([, q]) => q > 0).map(([itemId, qty]) => ({ itemId, qty: Math.floor(qty) })),
         deliverables: input.deliverables.map((text, i) => ({ id: `${no}-d${i}`, text, done: false })),
       };
       mutate((d) => ({ jobs: [...d.jobs, job] }));
@@ -318,6 +337,69 @@ export const useAppStore = create<AppState>()((set, get) => {
       return stage === 'Pending Review' && job.stage !== 'Pending Review'
         ? ok(`${no} reached 100% — sent to Pending Review for TEAM_LEAD QC`)
         : { ok: true, message: '' };
+    },
+    topUpGear: (no) => {
+      const blocked = guard('inventory.stockIn', 'Re-reserving gear needs TEAM_LEAD or above');
+      if (blocked) return blocked;
+      const { data } = get();
+      const job = data.jobs.find((j) => j.no === no);
+      if (!job) return denied('Job order not found');
+      const requested = job.requested ?? job.gear;
+      const missing: GearRequest = {};
+      for (const r of requested) {
+        const have = job.gear.find((g) => g.itemId === r.itemId)?.qty ?? 0;
+        if (r.qty > have) missing[r.itemId] = r.qty - have;
+      }
+      if (!Object.keys(missing).length) return ok(`${no} already has everything it asked for`);
+      const { granted, shortfall } = reserveGear(missing, data.inventory, data.jobs);
+      if (!granted.length) return denied('No more stock is free yet — stock in at the depot or free gear from another order');
+      const gear = [...job.gear];
+      for (const g of granted) {
+        const i = gear.findIndex((x) => x.itemId === g.itemId);
+        if (i >= 0) gear[i] = { ...gear[i], qty: gear[i].qty + g.qty }; else gear.push(g);
+      }
+      mutate((d) => ({ jobs: d.jobs.map((j) => (j.no === no ? { ...j, gear, requested } : j)) }));
+      return shortfall.length ? ok(`Reserved ${granted.reduce((s, g) => s + g.qty, 0)} more units · still short on ${shortfall.map((x) => x.item.shortName).join(', ')}`, 'warning') : ok(`${no} is now fully reserved`);
+    },
+
+    // ---------------- Event workspace
+    addBooking: (input) => {
+      const id = nextId(get().data.bookings, (b) => b.id, 'BK-', 2);
+      mutate((d) => ({ bookings: [...d.bookings, { ...input, id }] }));
+      return ok(`${input.kind === 'Permit' ? 'Permit' : 'Vendor'} added · ${input.name}`);
+    },
+    setBookingStatus: (id, status) => {
+      const b = get().data.bookings.find((x) => x.id === id);
+      mutate((d) => ({ bookings: d.bookings.map((x) => (x.id === id ? { ...x, status } : x)) }));
+      return ok(`${b?.name} → ${status}`);
+    },
+    addRunItem: (input) => {
+      const id = nextId(get().data.runOfShow, (r) => r.id, 'RS-', 1);
+      mutate((d) => ({ runOfShow: [...d.runOfShow, { ...input, id, done: false }] }));
+      return ok(`Added ${input.time} · ${input.title}`);
+    },
+    toggleRunItem: (id) => {
+      mutate((d) => ({ runOfShow: d.runOfShow.map((r) => (r.id === id ? { ...r, done: !r.done } : r)) }));
+      return { ok: true, message: '' };
+    },
+    reportIssue: (eventCode, text) => {
+      const id = nextId(get().data.issues, (i) => i.id, 'IS-', 1);
+      mutate((d) => ({ issues: [{ id, eventCode, text, raisedBy: get().persona().name, raisedAt: nowStamp(), resolvedAt: null }, ...d.issues] }));
+      return ok('Issue reported · it now shows on the event and in alerts', 'warning');
+    },
+    resolveIssue: (id) => {
+      mutate((d) => ({ issues: d.issues.map((i) => (i.id === id ? { ...i, resolvedAt: nowStamp() } : i)) }));
+      return ok('Issue resolved');
+    },
+    saveFeedback: (eventCode, feedback) => {
+      mutate((d) => ({ events: d.events.map((e) => (e.code === eventCode ? { ...e, feedback } : e)) }));
+      return ok('Client feedback saved');
+    },
+    closeEvent: (eventCode) => {
+      const blocked = guard('event.setStatus', 'Closing an event needs MANAGER or above');
+      if (blocked) return blocked;
+      mutate((d) => ({ events: d.events.map((e) => (e.code === eventCode ? { ...e, status: 'Completed', closedAt: nowStamp() } : e)) }));
+      return ok(`${eventCode} closed · archived from My events`);
     },
   };
 });

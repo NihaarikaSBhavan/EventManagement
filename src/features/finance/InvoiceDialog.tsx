@@ -18,7 +18,7 @@ type Line = { key: number; description: string; qty: string; rate: string };
 let lineKey = 0;
 const newLine = (): Line => ({ key: ++lineKey, description: '', qty: '1', rate: '' });
 
-export function InvoiceDialog({ track: initialTrack, onClose }: { track: null | 'AR' | 'AP'; onClose: (created?: 'AR' | 'AP') => void }) {
+export function InvoiceDialog({ track: initialTrack, onClose, defaultEvent }: { track: null | 'AR' | 'AP'; onClose: (created?: 'AR' | 'AP') => void; defaultEvent?: string }) {
   const events = useAppStore((s) => s.data.events);
   const vendors = useAppStore((s) => s.data.vendors);
   const createInvoice = useAppStore((s) => s.createInvoice);
@@ -36,10 +36,10 @@ export function InvoiceDialog({ track: initialTrack, onClose }: { track: null | 
   useEffect(() => {
     if (!initialTrack) return;
     setTrack(initialTrack);
-    setEventCode(events.find((e) => e.status !== 'Completed')?.code ?? '');
+    setEventCode(defaultEvent ?? events.find((e) => e.status !== 'Completed')?.code ?? '');
     setVendor(vendors[0]?.name ?? '');
     setMilestone('Retainer'); setGst(18); setIssuedOn(TODAY); setDueOn(addDays(TODAY, 15)); setLines([newLine()]); setError('');
-  }, [initialTrack, events, vendors]);
+  }, [initialTrack, events, vendors, defaultEvent]);
 
   const parsed = lines.map((l) => ({ description: l.description.trim(), qty: parseAmount(l.qty) || 0, rate: parseAmount(l.rate) || 0 }));
   const totals = invoiceTotals(parsed, gst);

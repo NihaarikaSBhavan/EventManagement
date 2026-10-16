@@ -34,7 +34,7 @@ export function CommandMenu({ open, onOpenChange }: { open: boolean; onOpenChang
               </Command.Group>
               <Command.Group heading="Events" className={group}>
                 {data.events.map((e) => (
-                  <Command.Item key={e.code} value={`${e.code} ${e.title} ${e.client} ${e.venue}`} onSelect={() => run(() => navigate(`/calendar?event=${e.code}`))} className={item}>
+                  <Command.Item key={e.code} value={`${e.code} ${e.title} ${e.client} ${e.venue}`} onSelect={() => run(() => navigate(`/events/${e.code}`))} className={item}>
                     <CalendarDays className="size-4" /><span className="truncate">{e.title}</span><span className="ml-auto font-mono text-2xs text-fg-subtle">{e.code}</span>
                   </Command.Item>
                 ))}

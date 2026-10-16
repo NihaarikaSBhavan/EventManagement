@@ -18,7 +18,7 @@ import { eventTone, jobTone } from '@/domain/tones';
 import type { ProductionEvent } from '@/domain/types';
 import { notify } from '@/hooks/useAction';
 import { useEntityLinks } from '@/hooks/useEntityLinks';
-import { useCan, usePersona } from '@/hooks/usePermission';
+import { useCan } from '@/hooks/usePermission';
 import { daysBetween, formatDate, formatRange, MONTHS, TODAY } from '@/lib/dates';
 import { formatINR, formatINRCompact, formatNumber, percent } from '@/lib/format';
 import { useAppStore } from '@/store/useAppStore';
@@ -27,7 +27,6 @@ import { BudgetTable } from '../finance/BudgetTable';
 export function DashboardPage() {
   const data = useAppStore((s) => s.data);
   const decide = useAppStore((s) => s.decideExpense);
-  const persona = usePersona();
   const canPnl = useCan('company.pnl');
   const canBudget = useCan('budget.oversee');
   const { openEvent, openJob } = useEntityLinks();
@@ -97,7 +96,7 @@ export function DashboardPage() {
   return (
     <>
       <PageHeader
-        title={`Good morning, ${persona.name.replace(/^K\. /, '').split(' ')[0]}`}
+        title="Company overview"
         description={`Operations across Chennai, Bengaluru, Hyderabad, Kochi, Coimbatore and Madurai · ${formatDate(TODAY)}`}
         actions={<Button variant="secondary" onClick={() => openEvent(m.upcoming[0]?.code ?? '')} disabled={!m.upcoming.length}><CalendarRange />Next production</Button>}
       />

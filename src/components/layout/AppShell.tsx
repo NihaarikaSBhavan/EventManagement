@@ -3,7 +3,6 @@ import { useEffect, useState } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import { useTheme } from '@/hooks/useTheme';
 import { usePersona } from '@/hooks/usePermission';
-import { EventDetailDialog } from '@/features/events/EventDetailDialog';
 import { JobDetailDialog } from '@/features/jobs/JobDetailDialog';
 import { CommandMenu } from './CommandMenu';
 import { navFor } from './nav';
@@ -64,7 +63,6 @@ export function AppShell() {
         </main>
       </div>
       <CommandMenu open={cmdOpen} onOpenChange={setCmdOpen} />
-      <EventDetailDialog />
       <JobDetailDialog />
     </div>
   );

@@ -1,12 +1,13 @@
 import { useCallback } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 
 /**
- * Event and job-order detail dialogs are addressed by URL (?event=…, ?job=…)
- * so they are deep-linkable and open from any module without prop drilling.
+ * Events open their workspace page; job orders open a detail dialog addressed
+ * by URL (?job=…) so it is deep-linkable from any screen.
  */
 export function useEntityLinks() {
   const [params, setParams] = useSearchParams();
+  const navigate = useNavigate();
   const set = useCallback(
     (key: 'event' | 'job', value: string | null) =>
       setParams((p) => {
@@ -19,9 +20,8 @@ export function useEntityLinks() {
     [setParams],
   );
   return {
-    eventCode: params.get('event'),
     jobNo: params.get('job'),
-    openEvent: (code: string) => set('event', code),
+    openEvent: (code: string, tab?: string) => navigate(`/events/${code}${tab ? `?tab=${tab}` : ''}`),
     openJob: (no: string) => set('job', no),
     close: () => set('event', null),
   };
