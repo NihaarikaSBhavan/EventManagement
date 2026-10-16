@@ -1,0 +1,72 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --canvas: 220 20% 97.5%;
+    --surface: 0 0% 100%;
+    --subtle: 220 18% 96%;
+    --muted: 220 14% 93%;
+    --line: 220 14% 90%;
+    --line-strong: 220 12% 82%;
+    --fg: 222 28% 9%;
+    --fg-muted: 220 10% 36%;
+    --fg-subtle: 220 9% 46%;
+    --primary: 232 64% 52%;
+    --primary-hover: 232 64% 45%;
+    --primary-fg: 0 0% 100%;
+    --primary-soft: 232 80% 96%;
+    --success: 158 72% 28%;
+    --success-soft: 152 50% 94%;
+    --warning: 34 92% 34%;
+    --warning-soft: 42 90% 93%;
+    --danger: 2 72% 46%;
+    --danger-soft: 4 86% 96%;
+    --chart-1: 158 64% 32%;
+    --chart-2: 38 88% 56%;
+    --chart-3: 8 76% 54%;
+    --chart-4: 232 64% 52%;
+    color-scheme: light;
+  }
+  .dark {
+    --canvas: 224 18% 6%;
+    --surface: 224 16% 9%;
+    --subtle: 224 14% 12%;
+    --muted: 224 12% 16%;
+    --line: 224 12% 17%;
+    --line-strong: 224 10% 26%;
+    --fg: 220 20% 96%;
+    --fg-muted: 220 10% 70%;
+    --fg-subtle: 220 8% 58%;
+    --primary: 232 84% 68%;
+    --primary-hover: 232 84% 74%;
+    --primary-fg: 228 40% 10%;
+    --primary-soft: 232 40% 18%;
+    --success: 156 56% 52%;
+    --success-soft: 158 40% 14%;
+    --warning: 38 92% 60%;
+    --warning-soft: 36 50% 14%;
+    --danger: 4 84% 66%;
+    --danger-soft: 4 46% 16%;
+    --chart-1: 156 56% 46%;
+    --chart-2: 40 90% 60%;
+    --chart-3: 6 82% 64%;
+    --chart-4: 232 84% 68%;
+    color-scheme: dark;
+  }
+
+  html, body, #root { height: 100%; }
+  body {
+    @apply bg-canvas font-sans text-[13px] leading-5 text-fg antialiased;
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: 'tnum' 1;
+  }
+  ::selection { @apply bg-primary/20; }
+  :focus-visible { @apply outline-none ring-2 ring-primary/60 ring-offset-1 ring-offset-canvas; }
+  * { scrollbar-width: thin; scrollbar-color: hsl(var(--line-strong)) transparent; }
+}
+
+@layer utilities {
+  .tabular { font-variant-numeric: tabular-nums; }
+}
